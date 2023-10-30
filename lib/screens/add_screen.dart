@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_todo_bloc/logic/cubit/change_index_cubit.dart';
 
 class AddScreen extends StatefulWidget {
   const AddScreen({super.key});
@@ -8,17 +10,12 @@ class AddScreen extends StatefulWidget {
 }
 
 class _AddScreenState extends State<AddScreen> {
-  final TextEditingController _userNameController = TextEditingController();
-
   final TextEditingController _titleController = TextEditingController();
 
   final TextEditingController _descController = TextEditingController();
 
-  bool isDone = false;
-
   @override
   void dispose() {
-    _userNameController.dispose();
     _titleController.dispose();
     _descController.dispose();
     super.dispose();
@@ -58,33 +55,33 @@ class _AddScreenState extends State<AddScreen> {
                     minLines: 4,
                   ),
                   const SizedBox(height: 30),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: RadioListTile(
-                          title: const Text('انجام نشده'),
-                          value: false,
-                          groupValue: isDone,
-                          onChanged: (value) {
-                            setState(() {
-                              isDone = value!;
-                            });
-                          },
-                        ),
-                      ),
-                      Expanded(
-                        child: RadioListTile(
-                          title: const Text('انجام شده'),
-                          value: true,
-                          groupValue: isDone,
-                          onChanged: (value) {
-                            setState(() {
-                              isDone = value!;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
+                  BlocBuilder<ChangeIndexCubit, bool>(
+                    builder: (context, state) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile(
+                              title: const Text('انجام نشده'),
+                              value: false,
+                              groupValue: BlocProvider.of<ChangeIndexCubit>(context).isDone,
+                              onChanged: (value) {
+                                BlocProvider.of<ChangeIndexCubit>(context).changeIndex(value!);
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile(
+                              title: const Text('انجام شده'),
+                              value: true,
+                              groupValue: BlocProvider.of<ChangeIndexCubit>(context).isDone,
+                              onChanged: (value) {
+                                BlocProvider.of<ChangeIndexCubit>(context).changeIndex(value!);
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
@@ -96,10 +93,7 @@ class _AddScreenState extends State<AddScreen> {
                     },
                     child: const Text(
                       'ثبت وظیفه',
-                      style: TextStyle(
-
-                        fontWeight: FontWeight.bold
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
