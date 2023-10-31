@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_todo_bloc/logic/bloc/todo_bloc.dart';
 import 'package:flutter_todo_bloc/logic/cubit/change_index_cubit.dart';
+import 'package:flutter_todo_bloc/screens/show_todo_screen.dart';
+import 'package:flutter_todo_bloc/snack_bar_widget.dart';
 
 class AddScreen extends StatefulWidget {
   const AddScreen({super.key});
@@ -26,8 +29,18 @@ class _AddScreenState extends State<AddScreen> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        leading: IconButton(onPressed: (){
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ShowTodoScreen(),
+            ),
+          );
+        }, icon: Icon(Icons.arrow_back)),
+      ),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: SingleChildScrollView(
@@ -84,17 +97,53 @@ class _AddScreenState extends State<AddScreen> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      fixedSize: Size(width * 0.75, 45),
-                    ),
-                    onPressed: () {
-                      if (formKey.currentState!.validate()) {}
+                  BlocConsumer<TodoBloc, TodoState>(
+                    listener: (context, state) {
+                      if (state is TodoErrorState) {
+                        getSnackBarWidget(context, state.error, Colors.red);
+                      }
+                      if (state is TodoCompletedState) {
+                        getSnackBarWidget(context, 'وظیفه با موفقیت اضافه شد', Colors.green);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ShowTodoScreen(),
+                          ),
+                        );
+                      }
                     },
-                    child: const Text(
-                      'ثبت وظیفه',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    builder: (context, state) {
+
+                      if(state is TodoLoadingState){
+
+                        return const Center(child: CircularProgressIndicator());
+
+                      }
+
+                      return ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          fixedSize: Size(width * 0.75, 45),
+                        ),
+                        onPressed: () {
+
+                          if (formKey.currentState!.validate()) {
+                            context.read<TodoBloc>().add(
+                                  CallAddTodo(
+                                    title: _titleController.text,
+                                    description: _descController.text,
+                                    isDone: BlocProvider.of<ChangeIndexCubit>(context).isDone
+                                        ? '1'
+                                        : '0',
+                                  ),
+                                );
+                          }
+                        },
+                        child: const Text(
+                          'ثبت وظیفه',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
